@@ -22,20 +22,23 @@ MIN_INCREMENT = 0.10
 COST_FLOOR = 0.01
 LOWER_BOUND = -100
 UPPER_BOUND = 100
-SCENARIO = 'Delayed transition' # 'Net Zero 2050' or 'Delayed transition' 
-SECTOR = 'Power' # Sectors are: 'O&G' &'Power' 
+SCENARIO = 'Low demand' # Options:'Net Zero 2050' | 'Delayed transition' | 'Fragmented World' | 'Below 2°C' | 'Low demand"
+SECTOR = 'Renewables' # Options:'O&G' | 'Power' | 'Renewables'
+MODEL = 'GCAM 6.0 NGFS' # Options: 'GCAM 6.0 NGFS' | 'REMIND-MAgPIE 3.2-4.6' | 'REMIND-MAgPIE 3.2-4.6 IntegratedPhysicalDamages (median)' |'REMIND-MAgPIE 3.2-4.6 IntegratedPhysicalDamages (95th-high)'
+
 
 #%% Define constants for different financial and environmental variables
-BASE = 'Current Policies'
+BASE = 'Current Policies' # Options:'Current Policies' | 'Nationally Determined Contributions (NDCs)'
 CARBON_PRICE = "Price|Carbon"
 TOTAL_EMISSIONS = "Emissions|CO2|Energy"
+EMISSIONS_RENEWABLES = "Emissions|CO2|Energy|Demand|Industry|Non-ferrous metals"
 PRIMARY_ENERGY = "Primary Energy"
 PRIMARY_ENERGY_GAS = "Primary Energy|Gas"
 PRIMARY_ENERGY_OIL = "Primary Energy|Oil|w/o CCS"
 OIL_PRICE = "Price|Primary Energy|Oil"
 GAS_PRICE = "Price|Primary Energy|Gas"
 PRIMARY_ENERGY_ELECTRICITY = "Final Energy|Electricity"
-#ELECTRICITY_PRICE = "Price|Final Energy|Residential and Commercial|Residential|Electricity" - Variable for Phase III
+#ELECTRICITY_PRICE = "Price|Final Energy|Residential and Commercial|Residential|Electricity" #- Variable for Phase III
 ELECTRICITY_PRICE = "Final Energy|Residential and Commercial|Residential|Electricity" #- Variable for Phase IV
 LOW_CARBON_INVESTMENT = "Post-processed|Investment|Low Carbon"
 EMISSIONS_ELECTRICITY = "Emissions|CO2|Energy|Supply|Electricity"
@@ -46,6 +49,10 @@ ELECTRIC_GAS_PRICE = "Price|Secondary Energy|Gases|Natural Gas"
 ELECTRIC_OIL = "Secondary Energy|Electricity|Oil"
 ELECTRIC_OIL_PRICE = "Price|Secondary Energy|Liquids|Oil"
 ELECTRICITY_INVESTMENT = "Post-processed|Investment|Energy Supply|Electricity"
+ELECTRIC_SOLAR = "Secondary Energy|Electricity|Solar"
+ELECTRIC_WIND = "Secondary Energy|Electricity|Wind"
+ELECTRIC_HYDRO = "Secondary Energy|Electricity|Hydro"
+SECONDARY_ENERGY = "Price|Secondary Energy|Electricity"
 
 #MAX_TTC = len(PD_RATINGS) #Max tc commented as PD_Ratings is no longer used - 12/12
 
@@ -158,7 +165,6 @@ def climate_shock(clients, master_scale):
     
     return pd.concat([df_2030, df_2040]).reset_index(drop=True)
 
-
 # Function to calculate Risk Factor Profiles (RFPs)
 #%% Uses different financial and environmental variables to compute RFPs
 def calc_RFPs(id_sector, scenario, ngfs):
@@ -166,16 +172,16 @@ def calc_RFPs(id_sector, scenario, ngfs):
     end_year_aux = END_YEAR + 5 - (END_YEAR%5)
 
     if id_sector == 'O&G':
-        carbon_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        total_emissions = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == TOTAL_EMISSIONS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        primary_energy = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_gas = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_oil = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        oil_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        gas_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_electricity = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        low_carbon = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == LOW_CARBON_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == TOTAL_EMISSIONS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        primary_energy = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        low_carbon = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == LOW_CARBON_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
 
         revenues = (energy_oil*oil_price + energy_gas*gas_price)*1000000000
         direct_cost= (total_emissions/primary_energy)*(energy_gas+energy_oil)*carbon_price*1000000
@@ -203,16 +209,16 @@ def calc_RFPs(id_sector, scenario, ngfs):
         indirect_select.extend([indirect_cost[-1]])
         capital_select.extend([capital[-1]])
 
-        carbon_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        total_emissions = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == TOTAL_EMISSIONS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        primary_energy = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_gas = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_oil = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        oil_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        gas_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        energy_electricity = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        low_carbon = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == LOW_CARBON_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == TOTAL_EMISSIONS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        primary_energy = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        energy_electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        low_carbon = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == LOW_CARBON_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
 
         revenues = (energy_oil*oil_price + energy_gas*gas_price)*1000000000
         direct_cost= (total_emissions/primary_energy)*(energy_gas+energy_oil)*carbon_price*1000000
@@ -241,17 +247,17 @@ def calc_RFPs(id_sector, scenario, ngfs):
         capital_base.extend([capital[-1]])
 
     if id_sector == 'Power':
-        carbon_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        total_emissions = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_coal = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_coal_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_gas = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_gas_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_oil = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_oil_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        investment = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        investment = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
 
         revenues = electricity*electricity_price*1000000000
         direct_cost= total_emissions*carbon_price*1000000
@@ -279,22 +285,111 @@ def calc_RFPs(id_sector, scenario, ngfs):
         indirect_select.extend([indirect_cost[-1]])
         capital_select.extend([capital[-1]])
 
-        carbon_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electricity_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        total_emissions = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_coal = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_coal_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_gas = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_gas_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_oil = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        electric_oil_price = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
-        investment = ngfs.loc[(ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        investment = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
 
         revenues = electricity*electricity_price*1000000000
         direct_cost= total_emissions*carbon_price*1000000
         indirect_cost = (electric_coal*electric_coal_price+electric_oil_price*electric_oil+electric_gas*electric_gas_price)*1000000000
         capital = investment*1000000000
+
+        revenues_base = []
+        direct_base = []
+        indirect_base = []
+        capital_base = []
+
+        for i in range(1, len(revenues)):
+            revenues_base.extend([revenues[i-1]])
+            direct_base.extend([direct_cost[i-1]])
+            indirect_base.extend([indirect_cost[i-1]])
+            capital_base.extend([capital[i-1]])
+            for j in range(1,5):
+                revenues_base.extend([revenues[i-1]+j*(revenues[i]-revenues[i-1])/5])
+                direct_base.extend([direct_cost[i-1]+j*(direct_cost[i]-direct_cost[i-1])/5])
+                indirect_base.extend([indirect_cost[i-1]+j*(indirect_cost[i]-indirect_cost[i-1])/5])
+                capital_base.extend([capital[i-1]+j*(capital[i]-capital[i-1])/5])
+
+        revenues_base.extend([revenues[-1]])
+        direct_base.extend([direct_cost[-1]])
+        indirect_base.extend([indirect_cost[-1]])
+        capital_base.extend([capital[-1]])
+        
+    if id_sector == 'Renewables':
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        investment = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_solar = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_SOLAR) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_wind = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_WIND) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_hydro = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == ELECTRIC_HYDRO) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        secondary_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == SECONDARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        renewables_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == EMISSIONS_RENEWABLES) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        
+        # New RFP Calculation formula proposal - 05/20/2024 -> Scenario for comparison
+        direct_cost= renewables_emissions*0 # In theory - it should be 0 
+        indirect_cost = (electric_solar*secondary_price+secondary_price*electric_wind+electric_hydro*secondary_price)*1000000000 # Substitution of heat-driven variables for renewable oriented methodologies
+        capital = investment*1000000000
+        revenues = electricity*electricity_price*1000000000
+
+        revenues_select = []
+        direct_select = []
+        indirect_select = []
+        capital_select = []
+
+        for i in range(1, len(revenues)):
+            revenues_select.extend([revenues[i-1]])
+            direct_select.extend([direct_cost[i-1]])
+            indirect_select.extend([indirect_cost[i-1]])
+            capital_select.extend([capital[i-1]])
+            for j in range(1,5):
+                revenues_select.extend([revenues[i-1]+j*(revenues[i]-revenues[i-1])/5])
+                direct_select.extend([direct_cost[i-1]+j*(direct_cost[i]-direct_cost[i-1])/5])
+                indirect_select.extend([indirect_cost[i-1]+j*(indirect_cost[i]-indirect_cost[i-1])/5])
+                capital_select.extend([capital[i-1]+j*(capital[i]-capital[i-1])/5])
+
+        revenues_select.extend([revenues[-1]])
+        direct_select.extend([direct_cost[-1]])
+        indirect_select.extend([indirect_cost[-1]])
+        capital_select.extend([capital[-1]])
+
+        carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == CARBON_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == PRIMARY_ENERGY_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electricity_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        total_emissions = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == EMISSIONS_ELECTRICITY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_coal_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_COAL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_gas_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_GAS_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_oil_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_OIL_PRICE) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        investment = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == BASE) & (ngfs.variable == ELECTRICITY_INVESTMENT) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_solar = ngfs.loc[(ngfs.model == MODEL) &(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_SOLAR) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_wind = ngfs.loc[(ngfs.model == MODEL) &(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_WIND) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        electric_hydro = ngfs.loc[(ngfs.model == MODEL) &(ngfs.scenario == BASE) & (ngfs.variable == ELECTRIC_HYDRO) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        secondary_price = ngfs.loc[(ngfs.model == MODEL) &(ngfs.scenario == BASE) & (ngfs.variable == SECONDARY_ENERGY) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+        renewables_emissions = ngfs.loc[(ngfs.model == MODEL) &(ngfs.scenario == BASE) & (ngfs.variable == EMISSIONS_RENEWABLES) & (ngfs.year >= start_year_aux) & (ngfs.year <= end_year_aux)].sort_values(by='year').value.values
+
+        # New RFP Calculation formula proposal - 05/20/2024 -> Scenario for base
+        direct_cost= renewables_emissions*0 # In theory - it should be 0 
+        indirect_cost = (electric_solar*secondary_price+secondary_price*electric_wind+electric_hydro*secondary_price)*1000000000 # Substitution of heat-driven variables for renewable oriented methodologies
+        capital = investment*1000000000
+        revenues = electricity*electricity_price*1000000000
 
         revenues_base = []
         direct_base = []
@@ -422,9 +517,9 @@ def error_sensitivities(x, df_RFPs,df_Heatmaps,df_Calibration, alpha_opt, master
         'Value':['direct_cost', 'indirect_cost', 'capital_expenditure', 'revenue'],
         'No impact':[0,0,0,0],
         'Low':[x[0], x[5], x[10],x[15]],
-        'Mod low':[x[1], x[6], x[11],x[16]],
+        'Mod Low':[x[1], x[6], x[11],x[16]],
         'Moderate':[x[2], x[7], x[12],x[17]],
-        'Mod high':[x[3], x[8], x[13],x[18]],
+        'Mod High':[x[3], x[8], x[13],x[18]],
         'High':[x[4], x[9], x[14],x[19]]
     })
 
@@ -465,13 +560,13 @@ def error_sensitivities(x, df_RFPs,df_Heatmaps,df_Calibration, alpha_opt, master
 
 # Main script execution starts here
 #%% Read portfolio data and NGFS (Network for Greening the Financial System) data
-portfolio = pd.read_excel('MS2_CIB_Portfolio.xlsx', sheet_name ='P&E') #Change sheet == O&G for Oil & Gas / sheet == P&E for Power
+portfolio = pd.read_excel('CIB_Portfolio.xlsx', sheet_name ='MS2_RENEW') #Change sheet == O&G for Oil & Gas / sheet == P&E for Power
 representative_clients = client_selection(portfolio)
 #ngfs = pd.read_csv('NGFS_Phase_III.csv') # - Phase III
-ngfs = pd.read_excel('NGFS_Phase_IV.xlsx', sheet_name= 'Phase_IV_NZ_DT_CP') # - Phase IV
+ngfs = pd.read_excel('NGFS_Phase_IV_All_Scenarios.xlsx', sheet_name= 'All_Scenarios') # - Phase IV
 ngfs = ngfs.drop('id', axis = 1)
 ngfs = ngfs.drop_duplicates()
-carbon_price = ngfs.loc[(ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE)]
+carbon_price = ngfs.loc[(ngfs.model == MODEL) & (ngfs.scenario == SCENARIO) & (ngfs.variable == CARBON_PRICE)]
 
 #%%
 representative_clients = portfolio.loc[portfolio.id.isin(representative_clients)].copy()
@@ -485,16 +580,16 @@ calibration_points = climate_shock(representative_clients, master_scale)
 RFPs = calc_RFPs(SECTOR, SCENARIO, ngfs)
 
 # heatmap = pd.read_excel('Heatmaps_NZ_ZP_Transition.xlsx', sheet_name='P&E-NZ') #Change sheet name O&G-NZ for Oil & Gas / P&E-NZ for Power
-heatmap = pd.read_excel('TRA_MS2_Heatmaps.xlsx', sheet_name='MS2-P&E-NZ')
+heatmap = pd.read_excel('TRA_MS2_Heatmaps.xlsx', sheet_name='P&E-LD-RENEW')
 
 #%%
 sensitivities = pd.DataFrame({
     'Value':['direct_cost', 'indirect_cost', 'capital_expenditure', 'revenue'],
     'No impact':[0,0,0,0],
     'Low':[1,1,1,1],
-    'Mod low':[1,1,1,1],
+    'Mod Low':[1,1,1,1],
     'Moderate':[1,1,1,1],
-    'Mod high':[1,1,1,1],
+    'Mod High':[1,1,1,1],
     'High':[1,1,1,1]
 })
 
@@ -729,9 +824,9 @@ df_ans = pd.DataFrame({
         'Value':['direct_cost', 'indirect_cost', 'capital_expenditure', 'revenue'],
         'No impact':[0,0,0,0],
         'Low':[ans[0], ans[5], ans[10],ans[15]],
-        'Mod low':[ans[1], ans[6], ans[11],ans[16]],
+        'Mod Low':[ans[1], ans[6], ans[11],ans[16]],
         'Moderate':[ans[2], ans[7], ans[12],ans[17]],
-        'Mod high':[ans[3], ans[8], ans[13],ans[18]],
+        'Mod High':[ans[3], ans[8], ans[13],ans[18]],
         'High':[ans[4], ans[9], ans[14],ans[19]]
     })
 #%%
@@ -784,7 +879,7 @@ print(df_output)
 #Get current directory
 current_directory = os.getcwd()
 #File path for Excel file
-file_path = os.path.join(current_directory, "MS2_Run1_NZ_P&E_MS_Heatmap.xlsx") #
+file_path = os.path.join(current_directory, "GCAM6_RENEW_LD.xlsx") #
 df_output.to_excel(file_path, index = False)
 
 print("Excel file saved at:",file_path)
